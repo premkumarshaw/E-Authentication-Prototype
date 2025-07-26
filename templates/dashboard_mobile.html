@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mobile Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        #username {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #007bff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to the Mobile Dashboard!</h2>
+        <p id="username">Fetching user...</p>
+
+        <button onclick="goToScan()">Scan QR to Login on PC</button>
+        <br>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        async function fetchUsername() {
+            const res = await fetch('/api/current_user');
+            const data = await res.json();
+            if (data.username) {
+                document.getElementById('username').innerText = `Logged in as: ${data.username}`;
+            } else {
+                window.location.href = '/mobile_login';
+            }
+        }
+
+        function goToScan() {
+            window.location.href = '/scan';
+        }
+
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/mobile_login';
+        }
+
+        fetchUsername();
+    </script>
+</body>
+</html>

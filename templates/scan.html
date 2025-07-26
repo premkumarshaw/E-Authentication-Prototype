@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Code Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #reader {
+      width: 90%;
+      max-width: 400px;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="reader"></div>
+
+  <script>
+    async function verifyToken(token) {
+      try {
+        const userRes = await fetch('/api/current_user');
+        const userData = await userRes.json();
+
+        if (userData.username) {
+          const verifyRes = await fetch('/api/verify_qr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: token,
+              user_id: userData.username
+            })
+          });
+
+          const result = await verifyRes.json();
+          if (result.status === 'verified') {
+            alert("PC login verified!");
+            window.location.href = "/mobile_dashboard";
+          } else {
+            alert("Invalid or expired QR code.");
+            window.location.href = "/mobile_dashboard";
+          }
+        } else {
+          alert("Login to mobile first.");
+          window.location.href = "/mobile_login";
+        }
+      } catch (err) {
+        alert("Error verifying QR.");
+        console.error(err);
+        window.location.href = "/mobile_dashboard";
+      }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      html5QrcodeScanner.clear().then(() => {
+        verifyToken(decodedText);
+      });
+    }
+
+    function onScanFailure(error) {
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+      fps: 10,
+      qrbox: 250
+    });
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+  </script>
+</body>
+</html>

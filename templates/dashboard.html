@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PC Dashboard</title>
+</head>
+<body>
+    <h2>Welcome to the PC Dashboard!</h2>
+    <p>You are successfully logged in via PC.</p>
+    <p id="username"></p>
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        async function fetchUsername() {
+            const res = await fetch('/api/current_user');
+            const data = await res.json();
+            if (data.username) {
+                document.getElementById('username').innerText = `Logged in as: ${data.username}`;
+            }
+        }
+
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/pc_login';
+        }
+
+        fetchUsername();
+    </script>
+</body>
+</html>

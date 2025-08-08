@@ -5,11 +5,12 @@ import random, string, qrcode
 from io import BytesIO
 import base64
 import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from email.message import EmailMessage
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'
+app.secret_key = 'Prem##Secure_Auth##'
 CORS(app)
 
 app.config['MYSQL_HOST'] = 'localhost'
@@ -19,9 +20,6 @@ app.config['MYSQL_DB'] = 'e_auth_db'
 app.config['MSQL_PORT'] = 3306
 
 mysql = MySQL(app)
-
-EMAIL_ADDRESS = "ps690864@gmail.com"
-EMAIL_PASSWORD = "ywzf gmws wssv ndbx"
 
 qr_sessions = {}
 
@@ -59,7 +57,7 @@ def register_user():
     data = request.json
     username = data.get('username')
     email = data.get('email')
-    password = data.get('password')
+    password = generate_password_hash(data.get('password'))
 
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM users WHERE username=%s OR email=%s", (username, email))
@@ -101,10 +99,13 @@ def login():
     login_input = data['username']
     password = data['password']
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM users WHERE (username=%s OR email=%s) AND password=%s", (login_input, login_input, password))
-    if cur.fetchone():
+    cur.execute("SELECT password FROM users WHERE username=%s OR email=%s", (login_input, login_input))
+    result = cur.fetchone()
+
+    if result and check_password_hash(result[0], password):
         session['otp_user'] = login_input
         return jsonify({'status': 'otp_sent'})
+
     return jsonify({'status': 'failed'})
 
 @app.route('/api/create_session', methods=['POST'])
@@ -147,22 +148,25 @@ def current_user():
     return jsonify({'username': username}) if username else jsonify({'username': None})
 
 def send_email_otp(receiver_email, otp):
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    smtp_username = "ps690864@gmail.com"  
+    smtp_password = "mtlx kycw psmc yqou"
+
+    msg = EmailMessage()
+    msg['Subject'] = "Your OTP Code"
+    msg['From'] = smtp_username 
+    msg['To'] = receiver_email
+    msg.set_content(f"Your OTP is: {otp}")
+
     try:
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_ADDRESS
-        msg['To'] = receiver_email
-        msg['Subject'] = "Your OTP for Login/Registration"
-        msg.attach(MIMEText(f"Your OTP is: {otp}", 'plain'))
-
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        server.sendmail(EMAIL_ADDRESS, receiver_email, msg.as_string())
-        server.quit()
+        with smtplib.SMTP(smtp_server, smtp_port) as smtp:
+            smtp.starttls()
+            smtp.login(smtp_username, smtp_password)
+            smtp.send_message(msg)
+            print("Email sent successfully")
     except Exception as e:
-        print("Email sending failed:", e)
-
-# -------- START SERVER --------
+        print("Error sending email:", e)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

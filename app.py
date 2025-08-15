@@ -148,23 +148,22 @@ def current_user():
     return jsonify({'username': username}) if username else jsonify({'username': None})
 
 def send_email_otp(receiver_email, otp):
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-    smtp_username = "ps690864@gmail.com"  
-    smtp_password = "mtlx kycw psmc yqou"
+    smtp_server = "smtp.titan.email"
+    smtp_port = 465 
+    smtp_username = "noreply@locknlogin.tech"
+    smtp_password = "Project7@2025"
 
     msg = EmailMessage()
     msg['Subject'] = "Your OTP Code"
-    msg['From'] = smtp_username 
+    msg['From'] = smtp_username
     msg['To'] = receiver_email
     msg.set_content(f"Your OTP is: {otp}")
 
     try:
-        with smtplib.SMTP(smtp_server, smtp_port) as smtp:
-            smtp.starttls()
+        with smtplib.SMTP_SSL(smtp_server, smtp_port) as smtp:
             smtp.login(smtp_username, smtp_password)
             smtp.send_message(msg)
-            print("Email sent successfully")
+            print("OTP sent successfully")
     except Exception as e:
         print("Error sending email:", e)
 
